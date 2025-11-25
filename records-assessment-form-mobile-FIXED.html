@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <title>Records Assessment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Mobile-First Base Styles */
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #f5f5f5; 
+            padding: 10px; 
+            line-height: 1.6;
+            font-size: 16px; /* Prevents iOS zoom on focus */
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 15px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 80px; /* Space for fixed navigation */
+        }
+        
+        h1 { 
+            color: #2c3e50; 
+            margin-bottom: 10px; 
+            font-size: 1.75em;
+        }
+        
+        h2 { 
+            color: #34495e; 
+            margin: 20px 0 15px; 
+            font-size: 1.5em;
+        }
+        
+        h3 { 
+            color: #7f8c8d; 
+            margin: 15px 0 10px; 
+            font-size: 1.2em;
+        }
+        
+        h4 { 
+            color: #95a5a6; 
+            margin: 10px 0 8px; 
+            font-size: 1.1em;
+        }
+        
+        .hidden { display: none !important; }
+        
+        /* Mobile-Optimized Buttons - iOS requires 44x44px minimum */
+        .btn { 
+            padding: 14px 24px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: 600; 
+            transition: all 0.3s;
+            min-height: 44px;
+            display: inline-block;
+            text-align: center;
+            touch-action: manipulation;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:active { background: #2980b9; }
+        
+        .btn-success { background: #27ae60; color: white; }
+        .btn-success:active { background: #229954; }
+        
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:active { background: #7f8c8d; }
+        
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:active { background: #c0392b; }
+        
+        .btn-small { 
+            padding: 12px 16px; 
+            font-size: 14px;
+            min-height: 44px;
+        }
+        
+        .btn-group { 
+            display: flex; 
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        /* Form Elements - Optimized for Mobile Input */
+        .form-group { 
+            margin-bottom: 20px;
+        }
+        
+        .form-row { 
+            display: flex; 
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #2c3e50;
+            font-size: 16px;
+        }
+        
+        label .required { color: #e74c3c; }
+        
+        input[type="text"], 
+        input[type="email"], 
+        input[type="tel"], 
+        input[type="number"], 
+        textarea, 
+        select { 
+            width: 100%; 
+            padding: 14px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 16px; /* Prevents iOS zoom */
+            -webkit-appearance: none;
+            appearance: none;
+            background: white;
+            min-height: 44px;
+        }
+        
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        textarea { 
+            min-height: 100px; 
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        select {
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23666" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            padding-right: 40px;
+        }
+        
+        .error { 
+            color: #e74c3c; 
+            font-size: 0.9em; 
+            margin-top: 5px; 
+            display: block;
+        }
+        
+        /* Assessment List */
+        .assessment-list { margin-top: 20px; }
+        
+        .assessment-card { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            display: flex; 
+            flex-direction: column;
+            gap: 10px;
+            background: #fafafa;
+            min-height: 44px;
+        }
+        
+        .assessment-info h3 { 
+            margin: 0 0 5px 0; 
+            color: #2c3e50;
+        }
+        
+        .assessment-meta { 
+            font-size: 0.9em; 
+            color: #7f8c8d;
+        }
+        
+        .status-badge { 
+            display: inline-block; 
+            padding: 5px 12px; 
+            border-radius: 4px; 
+            font-size: 0.85em; 
+            font-weight: bold;
+        }
+        
+        .status-draft { background: #f39c12; color: white; }
+        .status-complete { background: #27ae60; color: white; }
+        
+        /* Progress Bar - Mobile Optimized */
+        .progress-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            margin-bottom: 20px; 
+            position: relative;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .progress-bar::before { 
+            content: ''; 
+            position: absolute; 
+            top: 30px; 
+            left: 0; 
+            right: 0; 
+            height: 2px; 
+            background: #ddd; 
+            z-index: 0;
+        }
+        
+        .progress-step { 
+            flex: 1; 
+            text-align: center; 
+            position: relative;
+            min-width: 60px;
+        }
+        
+        .progress-step-circle { 
+            width: 44px; 
+            height: 44px; 
+            border-radius: 50%; 
+            background: #ddd; 
+            color: #7f8c8d; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto 8px; 
+            font-weight: bold; 
+            transition: all 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .progress-step.active .progress-step-circle { 
+            background: #3498db; 
+            color: white;
+        }
+        
+        .progress-step.completed .progress-step-circle { 
+            background: #27ae60; 
+            color: white;
+        }
+        
+        .progress-step-label { 
+            font-size: 0.75em; 
+            color: #7f8c8d;
+            word-wrap: break-word;
+        }
+        
+        /* Accordion */
+        .accordion-item { 
+            border: 1px solid #ddd; 
+            margin-bottom: 10px; 
+            border-radius: 8px; 
+            overflow: hidden;
+        }
+        
+        .accordion-header { 
+            background: #f8f9fa; 
+            padding: 16px; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: 600;
+            min-height: 44px;
+            font-size: 16px;
+        }
+        
+        .accordion-header:active { 
+            background: #e9ecef;
+        }
+        
+        .accordion-content { 
+            padding: 15px; 
+            display: none;
+        }
+        
+        .accordion-content.active { 
+            display: block;
+        }
+        
+        .accordion-toggle { 
+            transition: transform 0.3s;
+            font-size: 20px;
+        }
+        
+        .accordion-toggle.active { 
+            transform: rotate(180deg);
+        }
+        
+        /* Cards */
+        .card { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 8px; 
+            background: #fafafa;
+        }
+        
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+            padding-bottom: 10px; 
+            border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        /* Mobile-Optimized Navigation - Fixed at Bottom */
+        .form-navigation { 
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex; 
+            justify-content: space-between;
+            padding: 10px;
+            border-top: 2px solid #eee;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            gap: 10px;
+        }
+        
+        .form-navigation .btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        /* Checkbox/Radio Groups */
+        .checkbox-group, .radio-group { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px;
+        }
+        
+        .checkbox-item, .radio-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            min-height: 44px;
+        }
+        
+        .checkbox-item input,
+        .radio-item input {
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+        }
+        
+        /* Metadata Field Editor */
+        .metadata-field { 
+            display: flex; 
+            gap: 10px; 
+            align-items: flex-start; 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            background: white;
+            flex-wrap: wrap;
+        }
+        
+        .metadata-field-order { 
+            width: 30px; 
+            text-align: center; 
+            font-weight: bold; 
+            color: #7f8c8d; 
+            padding-top: 12px;
+            font-size: 18px;
+        }
+        
+        .metadata-field-controls { 
+            display: flex; 
+            flex-direction: column; 
+            gap: 5px;
+        }
+        
+        .metadata-field-inputs { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column;
+            gap: 10px;
+            min-width: 200px;
+        }
+        
+        /* Section Divider */
+        .section-divider { 
+            border-top: 2px solid #e0e0e0; 
+            margin: 25px 0; 
+            padding-top: 20px;
+        }
+        
+        /* Review Section */
+        .review-section { 
+            margin-bottom: 25px;
+        }
+        
+        .review-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .review-table th, .review-table td { 
+            padding: 12px 8px; 
+            border: 1px solid #ddd; 
+            text-align: left;
+        }
+        
+        .review-table th { 
+            background: #f8f9fa; 
+            font-weight: 600;
+        }
+        
+        /* Photo Upload - Mobile Optimized */
+        .photo-preview { 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+            margin-top: 10px;
+        }
+        
+        .photo-preview-item { 
+            position: relative; 
+            width: calc(50% - 5px); 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            padding: 5px; 
+            background: white;
+        }
+        
+        .photo-preview-item img { 
+            width: 100%; 
+            height: 150px; 
+            object-fit: cover; 
+            border-radius: 4px;
+        }
+        
+        .photo-remove { 
+            position: absolute; 
+            top: 8px; 
+            right: 8px; 
+            background: #e74c3c; 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            width: 36px; 
+            height: 36px; 
+            cursor: pointer; 
+            font-size: 20px; 
+            line-height: 1; 
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .photo-remove:active { 
+            background: #c0392b;
+        }
+        
+        /* Tablet and Desktop Adjustments */
+        @media (min-width: 768px) {
+            body { padding: 20px; }
+            
+            .container { 
+                padding: 30px;
+                margin-bottom: 30px;
+            }
+            
+            .btn { 
+                width: auto;
+                display: inline-block;
+            }
+            
+            .btn-group { 
+                flex-direction: row;
+            }
+            
+            .form-row { 
+                flex-direction: row;
+            }
+            
+            .form-navigation {
+                position: relative;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 2px solid #eee;
+                box-shadow: none;
+                padding: 20px 0 0 0;
+            }
+            
+            .assessment-card {
+                flex-direction: row;
+                align-items: center;
+            }
+            
+            .photo-preview-item {
+                width: 150px;
+            }
+            
+            .metadata-field-inputs {
+                flex-direction: row;
+            }
+        }
+        
+        /* Landscape Phone Adjustments */
+        @media (max-width: 767px) and (orientation: landscape) {
+            .progress-bar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="assessmentListView">
+            <h1>Records Assessment System</h1>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Manage and export records assessments</p>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="createNewAssessment()">+ New Assessment</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">Import Assessment</button>
+                <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importAssessment(event)">
+            </div>
+            <div class="assessment-list" id="assessmentList"></div>
+        </div>
+
+        <div id="assessmentFormView" class="hidden">
+            <h1>Records Assessment Form</h1>
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-step" data-step="1"><div class="progress-step-circle">1</div><div class="progress-step-label">Client</div></div>
+                <div class="progress-step" data-step="2"><div class="progress-step-circle">2</div><div class="progress-step-label">Sites</div></div>
+                <div class="progress-step" data-step="3"><div class="progress-step-circle">3</div><div class="progress-step-label">Storage</div></div>
+                <div class="progress-step" data-step="4"><div class="progress-step-circle">4</div><div class="progress-step-label">Collections</div></div>
+                <div class="progress-step" data-step="5"><div class="progress-step-circle">5</div><div class="progress-step-label">Review</div></div>
+            </div>
+
+            <form id="assessmentForm">
+                <!-- Step 1: Client & Contacts -->
+                <div class="form-step" id="step1">
+                    <h2>Step 1: Client & Contacts</h2>
+                    <div class="form-group">
+                        <label>Company Name <span class="required">*</span></label>
+                        <input type="text" id="clientName" required>
+                        <span class="error" id="clientNameError"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Internal Company ID</label>
+                        <input type="text" id="clientInternalId">
+                    </div>
+                    <h3>Contacts</h3>
+                    <div id="contactsContainer"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addContact()">+ Add Contact</button>
+                </div>
+
+                <!-- Step 2: Sites & Buildings -->
+                <div class="form-step hidden" id="step2">
+                    <h2>Step 2: Sites & Buildings</h2>
+                    <div id="sitesContainer"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addSite()">+ Add Site</button>
+                </div>
+
+                <!-- Step 3: Storage Areas -->
+                <div class="form-step hidden" id="step3">
+                    <h2>Step 3: Storage Areas & Logistics</h2>
+                    <p style="color: #7f8c8d; margin-bottom: 20px;">Add storage areas for each building defined in Step 2.</p>
+                    <div id="storageAreasContainer"></div>
+                </div>
+
+                <!-- Step 4: Collections (merged with containers, media, and metadata) -->
+                <div class="form-step hidden" id="step4">
+                    <h2>Step 4: Collections</h2>
+                    <div id="collectionsContainer"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addCollection()">+ Add Collection</button>
+                </div>
+
+                <!-- Step 5: Review & Export -->
+                <div class="form-step hidden" id="step5">
+                    <h2>Step 5: Review & Export</h2>
+                    <div id="reviewContainer"></div>
+                    <div class="btn-group" style="margin-top: 20px;">
+                        <button type="button" class="btn btn-success" onclick="markComplete()">Mark Complete</button>
+                        <button type="button" class="btn btn-primary" onclick="exportToExcel()">Export to Excel</button>
+                        <button type="button" class="btn btn-secondary" onclick="exportToJSON()">Export to JSON</button>
+                        <button type="button" class="btn btn-primary" onclick="sendAssessmentViaEmail()">📧 Send via Email</button>
+                    </div>
+                </div>
+
+                <div class="form-navigation">
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="backToList()">← Back to List</button>
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="previousStep()">← Previous</button>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" onclick="saveDraft()">Save Draft</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">Next →</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let currentAssessment = null;
+        let assessments = JSON.parse(localStorage.getItem('assessments') || '[]');
+
+        const US_STATES = [{code:'AL',name:'Alabama'},{code:'AK',name:'Alaska'},{code:'AZ',name:'Arizona'},{code:'AR',name:'Arkansas'},{code:'CA',name:'California'},{code:'CO',name:'Colorado'},{code:'CT',name:'Connecticut'},{code:'DE',name:'Delaware'},{code:'DC',name:'District of Columbia'},{code:'FL',name:'Florida'},{code:'GA',name:'Georgia'},{code:'HI',name:'Hawaii'},{code:'ID',name:'Idaho'},{code:'IL',name:'Illinois'},{code:'IN',name:'Indiana'},{code:'IA',name:'Iowa'},{code:'KS',name:'Kansas'},{code:'KY',name:'Kentucky'},{code:'LA',name:'Louisiana'},{code:'ME',name:'Maine'},{code:'MD',name:'Maryland'},{code:'MA',name:'Massachusetts'},{code:'MI',name:'Michigan'},{code:'MN',name:'Minnesota'},{code:'MS',name:'Mississippi'},{code:'MO',name:'Missouri'},{code:'MT',name:'Montana'},{code:'NE',name:'Nebraska'},{code:'NV',name:'Nevada'},{code:'NH',name:'New Hampshire'},{code:'NJ',name:'New Jersey'},{code:'NM',name:'New Mexico'},{code:'NY',name:'New York'},{code:'NC',name:'North Carolina'},{code:'ND',name:'North Dakota'},{code:'OH',name:'Ohio'},{code:'OK',name:'Oklahoma'},{code:'OR',name:'Oregon'},{code:'PA',name:'Pennsylvania'},{code:'RI',name:'Rhode Island'},{code:'SC',name:'South Carolina'},{code:'SD',name:'South Dakota'},{code:'TN',name:'Tennessee'},{code:'TX',name:'Texas'},{code:'UT',name:'Utah'},{code:'VT',name:'Vermont'},{code:'VA',name:'Virginia'},{code:'WA',name:'Washington'},{code:'WV',name:'West Virginia'},{code:'WI',name:'Wisconsin'},{code:'WY',name:'Wyoming'}];
+
+        const METADATA_TEMPLATES = {
+            'Custom': [],
+            'HR Records': [{name:'Last Name',critical:true},{name:'First Name',critical:true},{name:'Employee ID',critical:true},{name:'Date of Hire',critical:false},{name:'Department',critical:false}],
+            'Medical Records': [{name:'Patient Last Name',critical:true},{name:'Patient First Name',critical:true},{name:'Medical Record Number',critical:true},{name:'Date of Birth',critical:true},{name:'Date of Service',critical:false}],
+            'Financial Records': [{name:'Account Number',critical:true},{name:'Transaction Date',critical:true},{name:'Vendor/Customer Name',critical:false},{name:'Amount',critical:false},{name:'Document Type',critical:false}],
+            'Blueprints/Engineering': [{name:'Address',critical:true},{name:'Building Name',critical:false},{name:'Floor',critical:false},{name:'Drawing Type',critical:false},{name:'Drawing Number',critical:true}],
+            'Legal Records': [{name:'Document Type',critical:true},{name:'Case Number',critical:false},{name:'Party Name',critical:true},{name:'Date Filed',critical:false},{name:'Attorney',critical:false}]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => renderAssessmentList());
+
+        // ========== Assessment Management ==========
+        function createNewAssessment() {
+            currentAssessment = {
+                id: generateId(),
+                name: '',
+                status: 'Draft',
+                client: { name: '', internalId: '', contacts: [] },
+                sites: [],
+                collections: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            showFormView();
+            addContact();
+        }
+
+        function editAssessment(id) {
+            currentAssessment = assessments.find(a => a.id === id);
+            if (currentAssessment) {
+                currentAssessment.collections = currentAssessment.collections || [];
+                showFormView();
+                populateForm();
+            }
+        }
+
+        function deleteAssessment(id) {
+            if (confirm('Delete this assessment? This cannot be undone.')) {
+                assessments = assessments.filter(a => a.id !== id);
+                localStorage.setItem('assessments', JSON.stringify(assessments));
+                renderAssessmentList();
+            }
+        }
+
+        function showFormView() {
+            document.getElementById('assessmentListView').classList.add('hidden');
+            document.getElementById('assessmentFormView').classList.remove('hidden');
+            currentStep = 1;
+            updateProgress();
+        }
+
+        function backToList() {
+            if (confirm('Return to list? Any unsaved changes will be lost.')) {
+                document.getElementById('assessmentFormView').classList.add('hidden');
+                document.getElementById('assessmentListView').classList.remove('hidden');
+                renderAssessmentList();
+            }
+        }
+
+        function renderAssessmentList() {
+            const container = document.getElementById('assessmentList');
+            if (assessments.length === 0) {
+                container.innerHTML = '<p style="color:#7f8c8d;margin-top:20px;">No assessments yet. Create your first assessment to get started.</p>';
+                return;
+            }
+            container.innerHTML = assessments.map(a => `
+                <div class="assessment-card">
+                    <div class="assessment-info">
+                        <h3>${escapeHtml(a.client.name || 'Unnamed Assessment')}<span class="status-badge status-${a.status.toLowerCase()}">${a.status}</span></h3>
+                        <div class="assessment-meta">Created: ${new Date(a.createdAt).toLocaleDateString()} | Modified: ${new Date(a.updatedAt).toLocaleDateString()}</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-small" onclick="editAssessment('${a.id}')">Edit</button>
+                        <button class="btn btn-success btn-small" onclick="exportAssessmentToExcel('${a.id}')">Export</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteAssessment('${a.id}')">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== Navigation ==========
+        function nextStep() {
+            if (!validateCurrentStep()) return;
+            saveFormData();
+            if (currentStep < 5) {
+                document.getElementById(`step${currentStep}`).classList.add('hidden');
+                currentStep++;
+                document.getElementById(`step${currentStep}`).classList.remove('hidden');
+                updateProgress();
+                renderDynamicContent();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                saveFormData();
+                document.getElementById(`step${currentStep}`).classList.add('hidden');
+                currentStep--;
+                document.getElementById(`step${currentStep}`).classList.remove('hidden');
+                updateProgress();
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function updateProgress() {
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+                const stepNum = index + 1;
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                    step.classList.remove('active');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                    step.classList.remove('completed');
+                } else {
+                    step.classList.remove('active', 'completed');
+                }
+            });
+            document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'inline-block';
+            document.getElementById('nextBtn').style.display = currentStep === 5 ? 'none' : 'inline-block';
+        }
+
+        // ========== Validation ==========
+        function validateCurrentStep() {
+            clearErrors();
+            if (currentStep === 1) {
+                if (!document.getElementById('clientName').value.trim()) {
+                    showError('clientNameError', 'Company name is required');
+                    return false;
+                }
+                if (document.querySelectorAll('.contact-card').length === 0) {
+                    alert('Please add at least one contact');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.error').forEach(el => el.textContent = '');
+        }
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = msg;
+        }
+
+        // ========== Save/Load Form Data ==========
+        function saveFormData() {
+            if (!currentAssessment) return;
+
+            // Step 1: Client & Contacts
+            currentAssessment.client.name = document.getElementById('clientName').value.trim();
+            currentAssessment.client.internalId = document.getElementById('clientInternalId').value.trim();
+            currentAssessment.client.contacts = Array.from(document.querySelectorAll('.contact-card')).map(card => ({
+                firstName: card.querySelector('[data-field="contactFirstName"]').value,
+                lastName: card.querySelector('[data-field="contactLastName"]').value,
+                role: card.querySelector('[data-field="contactRole"]').value,
+                phone: card.querySelector('[data-field="contactPhone"]').value,
+                email: card.querySelector('[data-field="contactEmail"]').value
+            }));
+
+            // Step 2: Sites & Buildings
+            currentAssessment.sites = Array.from(document.querySelectorAll('#sitesContainer > .accordion-item')).map(siteEl => {
+                const content = siteEl.querySelector('.accordion-content');
+                return {
+                    id: siteEl.dataset.id,
+                    name: content.querySelector('[data-field="siteName"]').value,
+                    address: {
+                        street: content.querySelector('[data-field="siteStreetAddress"]').value,
+                        city: content.querySelector('[data-field="siteCity"]').value,
+                        state: content.querySelector('[data-field="siteState"]').value,
+                        zipCode: content.querySelector('[data-field="siteZipCode"]').value
+                    },
+                    buildings: Array.from(content.querySelectorAll('.card[data-id]')).map(bldg => ({
+                        id: bldg.dataset.id,
+                        name: bldg.querySelector('[data-field="buildingName"]').value,
+                        description: bldg.querySelector('[data-field="buildingDescription"]').value,
+                        storageAreas: []
+                    }))
+                };
+            });
+
+            // Step 3: Storage Areas (attached to buildings)
+            document.querySelectorAll('#storageAreasContainer > .accordion-item').forEach((areaAccordion, index) => {
+                const buildingId = areaAccordion.dataset.buildingId;
+                const storageAreaCards = areaAccordion.querySelectorAll('.storage-areas > .card');
+                const storageAreas = Array.from(storageAreaCards).map(card => {
+                    const areaId = card.dataset.id || generateId();
+                    let photos = [];
+                    
+                    // Get photos from preview container by reading the img src attributes
+                    const photoPreview = card.querySelector(`[data-photos="storageArea_${areaId}"]`);
+                    if (photoPreview) {
+                        const photoItems = photoPreview.querySelectorAll('.photo-preview-item');
+                        photos = Array.from(photoItems).map(item => {
+                            const img = item.querySelector('img');
+                            return img ? img.src : null;
+                        }).filter(src => src !== null);
+                    }
+                    
+                    return {
+                        id: areaId,
+                        name: card.querySelector('[data-field="storageAreaName"]')?.value || '',
+                        access: {
+                            stairs: card.querySelector('[data-field="accessStairs"]')?.checked || false,
+                            elevator: card.querySelector('[data-field="accessElevator"]')?.checked || false,
+                            loadingDock: card.querySelector('[data-field="accessLoadingDock"]')?.checked || false,
+                            vehicle: card.querySelector('[data-field="accessVehicle"]')?.checked || false,
+                            frontDoor: card.querySelector('[data-field="accessFrontDoor"]')?.checked || false,
+                            sideDoor: card.querySelector('[data-field="accessSideDoor"]')?.checked || false,
+                            rearDoor: card.querySelector('[data-field="accessRearDoor"]')?.checked || false
+                        },
+                        description: card.querySelector('[data-field="storageAreaDescription"]')?.value || '',
+                        photos: photos
+                    };
+                });
+                
+                // Find the corresponding building and attach storage areas
+                for (let site of currentAssessment.sites) {
+                    for (let building of site.buildings) {
+                        if (building.id === buildingId) {
+                            building.storageAreas = storageAreas;
+                            break;
+                        }
+                    }
+                }
+            });
+
+            // Step 4: Collections (with merged container, media, and metadata)
+            currentAssessment.collections = Array.from(document.querySelectorAll('#collectionsContainer > .accordion-item')).map(collEl => {
+                const content = collEl.querySelector('.accordion-content');
+                
+                // Get container types
+                const containerTypes = Array.from(content.querySelectorAll('.container-type-entry')).map(entry => {
+                    const containerId = entry.dataset.id;
+                    let containerPhotos = [];
+                    let contentsPhotos = [];
+                    
+                    // Get photos from preview containers by reading the img src attributes
+                    const containerPreview = entry.querySelector(`[data-photos="container_${containerId}"]`);
+                    const contentsPreview = entry.querySelector(`[data-photos="contents_${containerId}"]`);
+                    
+                    if (containerPreview) {
+                        const photoItems = containerPreview.querySelectorAll('.photo-preview-item');
+                        containerPhotos = Array.from(photoItems).map(item => {
+                            const img = item.querySelector('img');
+                            return img ? img.src : null;
+                        }).filter(src => src !== null);
+                    }
+                    
+                    if (contentsPreview) {
+                        const photoItems = contentsPreview.querySelectorAll('.photo-preview-item');
+                        contentsPhotos = Array.from(photoItems).map(item => {
+                            const img = item.querySelector('img');
+                            return img ? img.src : null;
+                        }).filter(src => src !== null);
+                    }
+                    
+                    return {
+                        type: entry.querySelector('[data-field="containerType"]').value,
+                        otherDetails: entry.querySelector('[data-field="containerOtherDetails"]')?.value || '',
+                        quantity: entry.querySelector('[data-field="containerQuantity"]').value,
+                        dimensions: entry.querySelector('[data-field="containerDimensions"]').value,
+                        condition: entry.querySelector('[data-field="containerCondition"]').value,
+                        conditionNotes: entry.querySelector('[data-field="containerConditionNotes"]')?.value || '',
+                        containerPhotos: containerPhotos,
+                        contentsPhotos: contentsPhotos
+                    };
+                });
+
+                // Get media types
+                const mediaTypes = Array.from(content.querySelectorAll('.media-type-entry')).map(entry => ({
+                    type: entry.querySelector('[data-field="mediaType"]').value,
+                    format: entry.querySelector('[data-field="mediaFormat"]').value,
+                    condition: entry.querySelector('[data-field="mediaCondition"]').value,
+                    conditionNotes: entry.querySelector('[data-field="mediaConditionNotes"]')?.value || ''
+                }));
+
+                // Get metadata fields
+                const metadataFields = Array.from(content.querySelectorAll('.metadata-field')).map((field, index) => ({
+                    order: index + 1,
+                    name: field.querySelector('[data-field="fieldName"]').value,
+                    critical: field.querySelector('[data-field="fieldCritical"]').checked
+                }));
+
+                return {
+                    id: collEl.dataset.id,
+                    name: content.querySelector('[data-field="collectionName"]').value,
+                    recordType: content.querySelector('[data-field="recordType"]').value,
+                    storageArea: content.querySelector('[data-field="storageArea"]').value,
+                    notes: content.querySelector('[data-field="collectionNotes"]').value,
+                    containerTypes: containerTypes,
+                    mediaTypes: mediaTypes,
+                    metadataTemplate: content.querySelector('[data-field="metadataTemplate"]').value,
+                    metadataFields: metadataFields
+                };
+            });
+
+            currentAssessment.updatedAt = new Date().toISOString();
+        }
+
+        function populateForm() {
+            // Step 1: Client & Contacts
+            document.getElementById('clientName').value = currentAssessment.client.name || '';
+            document.getElementById('clientInternalId').value = currentAssessment.client.internalId || '';
+            document.getElementById('contactsContainer').innerHTML = '';
+            if (currentAssessment.client.contacts && currentAssessment.client.contacts.length > 0) {
+                currentAssessment.client.contacts.forEach(contact => addContact(contact));
+            }
+
+            // Step 2: Sites & Buildings
+            document.getElementById('sitesContainer').innerHTML = '';
+            if (currentAssessment.sites && currentAssessment.sites.length > 0) {
+                currentAssessment.sites.forEach(site => {
+                    addSite(site);
+                });
+            }
+
+            // Steps 3-5 will be populated dynamically when user navigates to them
+        }
+
+        function saveDraft() {
+            saveFormData();
+            const index = assessments.findIndex(a => a.id === currentAssessment.id);
+            if (index >= 0) {
+                assessments[index] = currentAssessment;
+            } else {
+                assessments.push(currentAssessment);
+            }
+            localStorage.setItem('assessments', JSON.stringify(assessments));
+            alert('Assessment saved as draft');
+        }
+
+        function markComplete() {
+            saveFormData();
+            currentAssessment.status = 'Complete';
+            const index = assessments.findIndex(a => a.id === currentAssessment.id);
+            if (index >= 0) {
+                assessments[index] = currentAssessment;
+            } else {
+                assessments.push(currentAssessment);
+            }
+            localStorage.setItem('assessments', JSON.stringify(assessments));
+            alert('Assessment marked as complete!');
+        }
+
+        // ========== Step 1: Contacts ==========
+        function addContact(data = null) {
+            const container = document.getElementById('contactsContainer');
+            const html = `
+                <div class="card contact-card">
+                    <div class="card-header">
+                        <h3>Contact</h3>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>First Name <span class="required">*</span></label>
+                            <input type="text" data-field="contactFirstName" value="${escapeHtml(data?.firstName||'')}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name <span class="required">*</span></label>
+                            <input type="text" data-field="contactLastName" value="${escapeHtml(data?.lastName||'')}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Role/Title</label>
+                        <input type="text" data-field="contactRole" value="${escapeHtml(data?.role||'')}">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" data-field="contactPhone" value="${escapeHtml(data?.phone||'')}" placeholder="XXX-XXX-XXXX" oninput="formatPhoneNumber(this)">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" data-field="contactEmail" value="${escapeHtml(data?.email||'')}">
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: center;">
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeElement(this)" style="width: auto; min-width: 120px;">🗑️ Remove Contact</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        // ========== Step 2: Sites & Buildings ==========
+        function addSite(data = null) {
+            const stateOptions = US_STATES.map(s => 
+                `<option value="${s.code}" ${data?.address?.state === s.code ? 'selected' : ''}>${s.code} - ${s.name}</option>`
+            ).join('');
+            
+            const siteId = data?.id || generateId();
+            const html = `
+                <div class="accordion-item" data-id="${siteId}">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Site: ${escapeHtml(data?.name || 'New Site')}</span>
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content ${data ? 'active' : ''}">
+                        <div class="form-group">
+                            <label>Site Name <span class="required">*</span></label>
+                            <input type="text" data-field="siteName" value="${escapeHtml(data?.name||'')}" required onchange="updateAccordionTitle(this)">
+                        </div>
+                        <h4>Address</h4>
+                        <div class="form-group">
+                            <label>Street Address <span class="required">*</span></label>
+                            <input type="text" data-field="siteStreetAddress" value="${escapeHtml(data?.address?.street||'')}" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>City <span class="required">*</span></label>
+                                <input type="text" data-field="siteCity" value="${escapeHtml(data?.address?.city||'')}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>State <span class="required">*</span></label>
+                                <select data-field="siteState" required>
+                                    <option value="">Select...</option>
+                                    ${stateOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Zip Code <span class="required">*</span></label>
+                                <input type="text" data-field="siteZipCode" value="${escapeHtml(data?.address?.zipCode||'')}" pattern="[0-9]{5}" required>
+                            </div>
+                        </div>
+                        <h3>Buildings</h3>
+                        <div class="buildings-container" data-site="${siteId}"></div>
+                        <button type="button" class="btn btn-secondary" onclick="addBuilding('${siteId}')">+ Add Building</button><br><br>
+                        <button type="button" class="btn btn-danger" onclick="removeElement(this)">Remove Site</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('sitesContainer').insertAdjacentHTML('beforeend', html);
+            
+            // Add buildings if data provided
+            if (data?.buildings) {
+                data.buildings.forEach(building => addBuilding(siteId, building));
+            }
+        }
+
+        function addBuilding(siteId, data = null) {
+            const buildingId = data?.id || generateId();
+            const html = `
+                <div class="card" data-id="${buildingId}">
+                    <div class="card-header">
+                        <h3>Building</h3>
+                    </div>
+                    <div class="form-group">
+                        <label>Building Name <span class="required">*</span></label>
+                        <input type="text" data-field="buildingName" value="${escapeHtml(data?.name||'')}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Building Description</label>
+                        <textarea data-field="buildingDescription">${escapeHtml(data?.description||'')}</textarea>
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: center;">
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeElement(this)" style="width: auto; min-width: 120px;">🗑️ Remove Building</button>
+                    </div>
+                </div>
+            `;
+            document.querySelector(`[data-site="${siteId}"]`).insertAdjacentHTML('beforeend', html);
+        }
+
+        // ========== Step 3: Storage Areas ==========
+        function renderStorageAreas() {
+            saveFormData();
+            const container = document.getElementById('storageAreasContainer');
+            container.innerHTML = '';
+            
+            if (!currentAssessment.sites || currentAssessment.sites.length === 0) {
+                container.innerHTML = '<p style="color:#e74c3c;">Please add sites and buildings in Step 2 first.</p>';
+                return;
+            }
+
+            let hasBuildings = false;
+            currentAssessment.sites.forEach(site => {
+                site.buildings.forEach(building => {
+                    hasBuildings = true;
+                    const html = `
+                        <div class="accordion-item" data-building-id="${building.id}">
+                            <div class="accordion-header" onclick="toggleAccordion(this)">
+                                <span>${escapeHtml(site.name)} - ${escapeHtml(building.name)}</span>
+                                <span class="accordion-toggle">▼</span>
+                            </div>
+                            <div class="accordion-content active">
+                                <div class="storage-areas" data-building="${building.id}"></div>
+                                <button type="button" class="btn btn-secondary" onclick="addStorageArea('${building.id}')">+ Add Storage Area</button>
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', html);
+                    
+                    // Add existing storage areas
+                    if (building.storageAreas && building.storageAreas.length > 0) {
+                        building.storageAreas.forEach(area => {
+                            addStorageArea(building.id, area);
+                        });
+                    }
+                });
+            });
+
+            if (!hasBuildings) {
+                container.innerHTML = '<p style="color:#e74c3c;">Please add buildings in Step 2 first.</p>';
+            }
+        }
+
+        function addStorageArea(buildingId, data = null) {
+            const container = document.querySelector(`[data-building="${buildingId}"]`);
+            const areaId = data?.id || generateId();
+            const html = `
+                <div class="card" data-id="${areaId}">
+                    <div class="card-header">
+                        <h3>Storage Area</h3>
+                    </div>
+                    <div class="form-group">
+                        <label>Storage Area Name <span class="required">*</span></label>
+                        <input type="text" data-field="storageAreaName" value="${escapeHtml(data?.name||'')}" required>
+                    </div>
+                    <h4>Access Methods</h4>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="checkbox" data-field="accessStairs" ${data?.access?.stairs ? 'checked' : ''}> Stairs
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" data-field="accessElevator" ${data?.access?.elevator ? 'checked' : ''}> Elevator
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" data-field="accessLoadingDock" ${data?.access?.loadingDock ? 'checked' : ''}> Loading Dock
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" data-field="accessVehicle" ${data?.access?.vehicle ? 'checked' : ''}> Vehicle Access Nearby
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" data-field="accessFrontDoor" ${data?.access?.frontDoor ? 'checked' : ''}> Front Door
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" data-field="accessSideDoor" ${data?.access?.sideDoor ? 'checked' : ''}> Side Door
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="checkbox" data-field="accessRearDoor" ${data?.access?.rearDoor ? 'checked' : ''}> Rear Door
+                        </label>
+                    </div>
+                    <h4>Description / Comments / Concerns</h4>
+                    <div class="form-group">
+                        <textarea data-field="storageAreaDescription">${escapeHtml(data?.description||'')}</textarea>
+                    </div>
+                    <h4>Photos</h4>
+                    <div class="form-group">
+                        <input type="file" accept="image/*" capture="environment" data-field="storageAreaPhoto" onchange="handlePhotoUpload(this, 'storageArea_${areaId}')" style="display:none;" id="storagePhoto_${areaId}">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('storagePhoto_${areaId}').click()">📷 Take Photo</button>
+                        <div class="photo-preview" data-photos="storageArea_${areaId}"></div>
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: center;">
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeElement(this)" style="width: auto; min-width: 120px;">🗑️ Remove Storage Area</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            
+            // If there are existing photos, display them after a brief delay to ensure DOM is ready
+            if (data?.photos && data.photos.length > 0) {
+                console.log('Loading', data.photos.length, 'existing photos for storage area:', areaId);
+                setTimeout(() => {
+                    const photoPreview = document.querySelector(`[data-photos="storageArea_${areaId}"]`);
+                    if (photoPreview) {
+                        console.log('Photo preview container found for restoration');
+                        data.photos.forEach((photoSrc, index) => {
+                            const photoId = generateId();
+                            const photoItem = document.createElement('div');
+                            photoItem.className = 'photo-preview-item';
+                            photoItem.dataset.photoId = photoId;
+                            photoItem.innerHTML = `
+                                <img src="${photoSrc}" alt="Storage Area Photo">
+                                <button type="button" class="photo-remove" onclick="removePhoto('storageArea_${areaId}', '${photoId}')">×</button>
+                            `;
+                            photoPreview.appendChild(photoItem);
+                            console.log('Restored photo', index + 1, 'of', data.photos.length);
+                        });
+                    } else {
+                        console.error('Photo preview container not found for restoration:', 'storageArea_' + areaId);
+                    }
+                }, 100);
+            }
+        }
+
+        // ========== Step 4: Collections (merged with containers, media, and metadata) ==========
+        function getAllStorageAreas() {
+            const storageAreas = [];
+            if (currentAssessment.sites) {
+                currentAssessment.sites.forEach(site => {
+                    site.buildings.forEach(building => {
+                        if (building.storageAreas) {
+                            building.storageAreas.forEach(area => {
+                                storageAreas.push({
+                                    value: area.id,
+                                    label: `${site.name} - ${building.name} - ${area.name}`
+                                });
+                            });
+                        }
+                    });
+                });
+            }
+            return storageAreas;
+        }
+
+        function addCollection(data = null) {
+            const collectionId = data?.id || generateId();
+            const storageAreas = getAllStorageAreas();
+            const storageAreaOptions = storageAreas.map(sa => 
+                `<option value="${sa.value}" ${data?.storageArea === sa.value ? 'selected' : ''}>${escapeHtml(sa.label)}</option>`
+            ).join('');
+
+            const templateOptions = Object.keys(METADATA_TEMPLATES).map(t => 
+                `<option ${data?.metadataTemplate === t ? 'selected' : ''}>${t}</option>`
+            ).join('');
+
+            const html = `
+                <div class="accordion-item" data-id="${collectionId}">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span>Collection: ${escapeHtml(data?.name || 'New Collection')}</span>
+                        <span class="accordion-toggle">▼</span>
+                    </div>
+                    <div class="accordion-content ${data ? 'active' : ''}">
+                        <div class="form-group">
+                            <label>Collection Name <span class="required">*</span></label>
+                            <input type="text" data-field="collectionName" value="${escapeHtml(data?.name||'')}" required onchange="updateAccordionTitle(this)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Record Type</label>
+                            <input type="text" data-field="recordType" value="${escapeHtml(data?.recordType||'')}" placeholder="e.g. Past Employee">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Storage Area</label>
+                            <select data-field="storageArea">
+                                <option value="">Select Storage Area...</option>
+                                ${storageAreaOptions}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Notes</label>
+                            <textarea data-field="collectionNotes">${escapeHtml(data?.notes||'')}</textarea>
+                        </div>
+
+                        <div class="section-divider"></div>
+
+                        <!-- Container Types Section -->
+                        <h3>Container Types</h3>
+                        <div class="container-types-container" data-collection="${collectionId}"></div>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="addContainerType('${collectionId}')">+ Add Container Type</button>
+
+                        <div class="section-divider"></div>
+
+                        <!-- Media Types Section -->
+                        <h3>Media Types</h3>
+                        <div class="media-types-container" data-collection="${collectionId}"></div>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="addMediaType('${collectionId}')">+ Add Media Type</button>
+
+                        <div class="section-divider"></div>
+
+                        <!-- Metadata/Indexing Section -->
+                        <h3>Metadata / Indexing</h3>
+                        <div class="form-group">
+                            <label>Template</label>
+                            <select data-field="metadataTemplate" onchange="applyMetadataTemplate(this, '${collectionId}')">
+                                ${templateOptions}
+                            </select>
+                        </div>
+                        <h4>Metadata Fields</h4>
+                        <div class="metadata-fields-container" data-collection="${collectionId}"></div>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="addMetadataField('${collectionId}')">+ Add Field</button>
+
+                        <br><br>
+                        <button type="button" class="btn btn-danger" onclick="removeElement(this)">Remove Collection</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('collectionsContainer').insertAdjacentHTML('beforeend', html);
+
+            // Populate container types if data provided
+            if (data?.containerTypes && data.containerTypes.length > 0) {
+                data.containerTypes.forEach(container => addContainerType(collectionId, container));
+            }
+
+            // Populate media types if data provided
+            if (data?.mediaTypes && data.mediaTypes.length > 0) {
+                data.mediaTypes.forEach(media => addMediaType(collectionId, media));
+            }
+
+            // Populate metadata fields
+            if (data?.metadataFields && data.metadataFields.length > 0) {
+                data.metadataFields.forEach(field => addMetadataField(collectionId, field));
+            } else if (data?.metadataTemplate && METADATA_TEMPLATES[data.metadataTemplate]) {
+                METADATA_TEMPLATES[data.metadataTemplate].forEach(field => addMetadataField(collectionId, field));
+            }
+        }
+
+        function addContainerType(collectionId, data = null) {
+            const container = document.querySelector(`.container-types-container[data-collection="${collectionId}"]`);
+            if (!container) {
+                console.error('Container types container not found for collection:', collectionId);
+                return;
+            }
+            const containerId = generateId();
+            const showOther = data?.type === 'Other';
+            
+            const html = `
+                <div class="card container-type-entry" data-id="${containerId}">
+                    <div class="card-header">
+                        <h4>Container Type</h4>
+                    </div>
+                    <div class="form-group">
+                        <label>Container Type <span class="required">*</span></label>
+                        <select data-field="containerType" required onchange="toggleContainerOther(this)">
+                            <option value="">Select...</option>
+                            <option ${data?.type === 'Bankers Box' ? 'selected' : ''}>Bankers Box</option>
+                            <option ${data?.type === 'Tall Filing Cabinet drawer' ? 'selected' : ''}>Tall Filing Cabinet drawer</option>
+                            <option ${data?.type === 'Wide Filing Cabinet drawer' ? 'selected' : ''}>Wide Filing Cabinet drawer</option>
+                            <option ${data?.type === 'Storage Box' ? 'selected' : ''}>Storage Box</option>
+                            <option ${data?.type === 'Binder' ? 'selected' : ''}>Binder</option>
+                            <option ${data?.type === 'Carton' ? 'selected' : ''}>Carton</option>
+                            <option ${data?.type === 'Other' ? 'selected' : ''}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group container-other-field ${showOther ? '' : 'hidden'}">
+                        <label>Other Container Details</label>
+                        <input type="text" data-field="containerOtherDetails" value="${escapeHtml(data?.otherDetails||'')}" placeholder="Describe the container type">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" data-field="containerQuantity" value="${data?.quantity||''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Dimensions</label>
+                            <input type="text" data-field="containerDimensions" value="${escapeHtml(data?.dimensions||'')}" placeholder="e.g., 12x15x10">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Condition</label>
+                        <select data-field="containerCondition" onchange="toggleConditionNotes(this)">
+                            <option ${data?.condition === 'Excellent' ? 'selected' : ''}>Excellent</option>
+                            <option ${data?.condition === 'Good' ? 'selected' : ''}>Good</option>
+                            <option ${data?.condition === 'Fair' ? 'selected' : ''}>Fair</option>
+                            <option ${data?.condition === 'Poor' ? 'selected' : ''}>Poor</option>
+                        </select>
+                    </div>
+                    <div class="form-group condition-notes-field ${(data?.condition === 'Fair' || data?.condition === 'Poor') ? '' : 'hidden'}">
+                        <label>Notes</label>
+                        <textarea data-field="containerConditionNotes" placeholder="Describe the condition issues...">${escapeHtml(data?.conditionNotes||'')}</textarea>
+                    </div>
+                    <h4>Photos</h4>
+                    <div class="form-group">
+                        <label>Container Photos</label>
+                        <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(this, 'container_${containerId}')" style="display:none;" id="containerPhoto_${containerId}">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('containerPhoto_${containerId}').click()">📷 Take Photo of Container</button>
+                        <div class="photo-preview" data-photos="container_${containerId}"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Contents Photos</label>
+                        <input type="file" accept="image/*" capture="environment" onchange="handlePhotoUpload(this, 'contents_${containerId}')" style="display:none;" id="contentsPhoto_${containerId}">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="document.getElementById('contentsPhoto_${containerId}').click()">📷 Take Photo of Contents</button>
+                        <div class="photo-preview" data-photos="contents_${containerId}"></div>
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: center;">
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeElement(this)" style="width: auto; min-width: 120px;">🗑️ Remove Container</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            
+            // If there are existing photos, display them after a brief delay to ensure DOM is ready
+            if (data?.containerPhotos && data.containerPhotos.length > 0) {
+                console.log('Loading', data.containerPhotos.length, 'container photos for:', containerId);
+                setTimeout(() => {
+                    const containerPreview = document.querySelector(`[data-photos="container_${containerId}"]`);
+                    if (containerPreview) {
+                        console.log('Container photo preview found for restoration');
+                        data.containerPhotos.forEach((photoSrc, index) => {
+                            const photoId = generateId();
+                            const photoItem = document.createElement('div');
+                            photoItem.className = 'photo-preview-item';
+                            photoItem.dataset.photoId = photoId;
+                            photoItem.innerHTML = `
+                                <img src="${photoSrc}" alt="Container Photo">
+                                <button type="button" class="photo-remove" onclick="removePhoto('container_${containerId}', '${photoId}')">×</button>
+                            `;
+                            containerPreview.appendChild(photoItem);
+                            console.log('Restored container photo', index + 1, 'of', data.containerPhotos.length);
+                        });
+                    } else {
+                        console.error('Container photo preview not found for restoration');
+                    }
+                }, 100);
+            }
+            
+            if (data?.contentsPhotos && data.contentsPhotos.length > 0) {
+                console.log('Loading', data.contentsPhotos.length, 'contents photos for:', containerId);
+                setTimeout(() => {
+                    const contentsPreview = document.querySelector(`[data-photos="contents_${containerId}"]`);
+                    if (contentsPreview) {
+                        console.log('Contents photo preview found for restoration');
+                        data.contentsPhotos.forEach((photoSrc, index) => {
+                            const photoId = generateId();
+                            const photoItem = document.createElement('div');
+                            photoItem.className = 'photo-preview-item';
+                            photoItem.dataset.photoId = photoId;
+                            photoItem.innerHTML = `
+                                <img src="${photoSrc}" alt="Contents Photo">
+                                <button type="button" class="photo-remove" onclick="removePhoto('contents_${containerId}', '${photoId}')">×</button>
+                            `;
+                            contentsPreview.appendChild(photoItem);
+                            console.log('Restored contents photo', index + 1, 'of', data.contentsPhotos.length);
+                        });
+                    } else {
+                        console.error('Contents photo preview not found for restoration');
+                    }
+                }, 100);
+            }
+        }
+
+        function toggleContainerOther(select) {
+            const card = select.closest('.container-type-entry');
+            const otherField = card.querySelector('.container-other-field');
+            if (select.value === 'Other') {
+                otherField.classList.remove('hidden');
+            } else {
+                otherField.classList.add('hidden');
+            }
+        }
+
+        function toggleConditionNotes(select) {
+            const card = select.closest('.card');
+            const notesField = card.querySelector('.condition-notes-field');
+            if (notesField) {
+                if (select.value === 'Fair' || select.value === 'Poor') {
+                    notesField.classList.remove('hidden');
+                } else {
+                    notesField.classList.add('hidden');
+                }
+            }
+        }
+
+        function addMediaType(collectionId, data = null) {
+            const container = document.querySelector(`.media-types-container[data-collection="${collectionId}"]`);
+            if (!container) {
+                console.error('Media types container not found for collection:', collectionId);
+                return;
+            }
+            const mediaId = generateId();
+            
+            const html = `
+                <div class="card media-type-entry" data-id="${mediaId}">
+                    <div class="card-header">
+                        <h4>Media Type</h4>
+                    </div>
+                    <div class="form-group">
+                        <label>Media Type <span class="required">*</span></label>
+                        <select data-field="mediaType" required>
+                            <option value="">Select...</option>
+                            <option ${data?.type === 'Paper Documents' ? 'selected' : ''}>Paper Documents</option>
+                            <option ${data?.type === 'Blueprints/Plans' ? 'selected' : ''}>Blueprints/Plans</option>
+                            <option ${data?.type === 'Photographs' ? 'selected' : ''}>Photographs</option>
+                            <option ${data?.type === 'VHS Tapes' ? 'selected' : ''}>VHS Tapes</option>
+                            <option ${data?.type === 'Audio Cassettes' ? 'selected' : ''}>Audio Cassettes</option>
+                            <option ${data?.type === 'CDs/DVDs' ? 'selected' : ''}>CDs/DVDs</option>
+                            <option ${data?.type === 'Microfilm/Microfiche' ? 'selected' : ''}>Microfilm/Microfiche</option>
+                            <option ${data?.type === 'Other' ? 'selected' : ''}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Format/Size</label>
+                            <input type="text" data-field="mediaFormat" value="${escapeHtml(data?.format||'')}" placeholder="e.g., 8.5x11, 24x36">
+                        </div>
+                        <div class="form-group">
+                            <label>Condition</label>
+                            <select data-field="mediaCondition" onchange="toggleConditionNotes(this)">
+                                <option ${data?.condition === 'Excellent' ? 'selected' : ''}>Excellent</option>
+                                <option ${data?.condition === 'Good' ? 'selected' : ''}>Good</option>
+                                <option ${data?.condition === 'Fair' ? 'selected' : ''}>Fair</option>
+                                <option ${data?.condition === 'Poor' ? 'selected' : ''}>Poor</option>
+                                <option ${data?.condition === 'Damaged' ? 'selected' : ''}>Damaged</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group condition-notes-field ${(data?.condition === 'Fair' || data?.condition === 'Poor') ? '' : 'hidden'}">
+                        <label>Notes</label>
+                        <textarea data-field="mediaConditionNotes" placeholder="Describe the condition issues...">${escapeHtml(data?.conditionNotes||'')}</textarea>
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 2px solid #ddd; text-align: center;">
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeElement(this)" style="width: auto; min-width: 120px;">🗑️ Remove Media Type</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function applyMetadataTemplate(select, collectionId) {
+            const template = select.value;
+            const container = document.querySelector(`.metadata-fields-container[data-collection="${collectionId}"]`);
+            if (!container) {
+                console.error('Metadata fields container not found for collection:', collectionId);
+                return;
+            }
+            container.innerHTML = '';
+            
+            if (METADATA_TEMPLATES[template]) {
+                METADATA_TEMPLATES[template].forEach(field => addMetadataField(collectionId, field));
+            }
+        }
+
+        function addMetadataField(collectionId, data = null) {
+            const container = document.querySelector(`.metadata-fields-container[data-collection="${collectionId}"]`);
+            if (!container) {
+                console.error('Metadata fields container not found for collection:', collectionId);
+                return;
+            }
+            const order = container.children.length + 1;
+            const html = `
+                <div class="metadata-field">
+                    <div class="metadata-field-order">${order}</div>
+                    <div class="metadata-field-inputs">
+                        <input type="text" data-field="fieldName" value="${escapeHtml(data?.name||'')}" placeholder="Field Name" required>
+                        <label class="checkbox-item">
+                            <input type="checkbox" data-field="fieldCritical" ${data?.critical ? 'checked' : ''}> Critical Field
+                        </label>
+                    </div>
+                    <div class="metadata-field-controls">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="moveMetadataField(this, 'up')">↑</button>
+                        <button type="button" class="btn btn-secondary btn-small" onclick="moveMetadataField(this, 'down')">↓</button>
+                        <button type="button" class="btn btn-danger btn-small" onclick="removeMetadataField(this)">×</button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        }
+
+        function moveMetadataField(btn, direction) {
+            const field = btn.closest('.metadata-field');
+            const sibling = direction === 'up' ? field.previousElementSibling : field.nextElementSibling;
+            if (sibling) {
+                if (direction === 'up') {
+                    field.parentNode.insertBefore(field, sibling);
+                } else {
+                    field.parentNode.insertBefore(sibling, field);
+                }
+                renumberMetadataFields(field.parentNode);
+            }
+        }
+
+        function removeMetadataField(btn) {
+            const field = btn.closest('.metadata-field');
+            const container = field.parentNode;
+            field.remove();
+            renumberMetadataFields(container);
+        }
+
+        function renumberMetadataFields(container) {
+            container.querySelectorAll('.metadata-field').forEach((field, index) => {
+                field.querySelector('.metadata-field-order').textContent = index + 1;
+            });
+        }
+
+        // ========== Step 5: Review ==========
+        function renderReview() {
+            saveFormData();
+            
+            let html = `<div class="review-section">
+                <h3>Assessment Summary</h3>
+                <div class="card">
+                    <p><strong>Company Name:</strong> ${escapeHtml(currentAssessment.client.name||'N/A')}</p>
+                    <p><strong>Internal Company ID:</strong> ${escapeHtml(currentAssessment.client.internalId||'N/A')}</p>
+                    <p><strong>Status:</strong> ${currentAssessment.status}</p>
+                    <p><strong>Created:</strong> ${new Date(currentAssessment.createdAt).toLocaleString()}</p>
+                    <p><strong>Last Modified:</strong> ${new Date(currentAssessment.updatedAt).toLocaleString()}</p>
+                </div>
+            </div>`;
+
+            // Contacts
+            html += `<div class="review-section">
+                <h3>Contacts (${currentAssessment.client.contacts.length})</h3>
+                <table class="review-table">
+                    <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Phone</th></tr></thead>
+                    <tbody>`;
+            currentAssessment.client.contacts.forEach(c => {
+                html += `<tr>
+                    <td>${escapeHtml(c.firstName)} ${escapeHtml(c.lastName)}</td>
+                    <td>${escapeHtml(c.role||'-')}</td>
+                    <td>${escapeHtml(c.email||'-')}</td>
+                    <td>${escapeHtml(c.phone||'-')}</td>
+                </tr>`;
+            });
+            html += `</tbody></table></div>`;
+
+            // Sites & Buildings
+            html += `<div class="review-section">
+                <h3>Sites & Buildings (${currentAssessment.sites.length} sites)</h3>`;
+            currentAssessment.sites.forEach(site => {
+                html += `<div class="card">
+                    <h4>${escapeHtml(site.name)}</h4>
+                    <p>${escapeHtml(site.address.street)}, ${escapeHtml(site.address.city)}, ${site.address.state} ${site.address.zipCode}</p>
+                    <p><strong>Buildings:</strong> ${site.buildings.length}</p>
+                    <ul>`;
+                site.buildings.forEach(b => {
+                    html += `<li>${escapeHtml(b.name)} - ${b.storageAreas?.length || 0} storage areas</li>`;
+                });
+                html += `</ul></div>`;
+            });
+            html += `</div>`;
+
+            // Collections
+            html += `<div class="review-section">
+                <h3>Collections (${currentAssessment.collections.length})</h3>`;
+            currentAssessment.collections.forEach(coll => {
+                html += `<div class="card">
+                    <h4>${escapeHtml(coll.name)}</h4>
+                    <p><strong>Type:</strong> ${escapeHtml(coll.recordType||'N/A')}</p>
+                    <p><strong>Container Types:</strong> ${coll.containerTypes?.length || 0}</p>
+                    <p><strong>Media Types:</strong> ${coll.mediaTypes?.length || 0}</p>
+                    <p><strong>Metadata Fields:</strong> ${coll.metadataFields?.length || 0} (${coll.metadataFields?.filter(f => f.critical).length || 0} critical)</p>
+                </div>`;
+            });
+            html += `</div>`;
+
+            document.getElementById('reviewContainer').innerHTML = html;
+        }
+
+        // ========== Dynamic Content Rendering ==========
+        function renderDynamicContent() {
+            if (currentStep === 3) {
+                renderStorageAreas();
+            } else if (currentStep === 4 && currentAssessment.collections.length > 0) {
+                document.getElementById('collectionsContainer').innerHTML = '';
+                currentAssessment.collections.forEach(coll => addCollection(coll));
+            } else if (currentStep === 5) {
+                renderReview();
+            }
+        }
+
+        // ========== Photo Upload Handling ==========
+        function handlePhotoUpload(input, photoGroupId) {
+            console.log('handlePhotoUpload called with photoGroupId:', photoGroupId);
+            
+            const file = input.files[0];
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+            
+            console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+            
+            // Check if it's an image
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const photoData = e.target.result;
+                console.log('Photo data loaded, length:', photoData.length);
+                
+                const previewContainer = document.querySelector(`[data-photos="${photoGroupId}"]`);
+                console.log('Looking for preview container with data-photos:', photoGroupId);
+                console.log('Preview container found:', previewContainer);
+                
+                if (!previewContainer) {
+                    console.error('Preview container not found for:', photoGroupId);
+                    console.log('Available preview containers:', Array.from(document.querySelectorAll('[data-photos]')).map(el => el.getAttribute('data-photos')));
+                    alert('Error: Could not find photo preview area. Please try again or contact support.');
+                    return;
+                }
+                
+                // Create unique photo ID
+                const photoId = generateId();
+                console.log('Generated photo ID:', photoId);
+                
+                // Create preview element
+                const photoItem = document.createElement('div');
+                photoItem.className = 'photo-preview-item';
+                photoItem.dataset.photoId = photoId;
+                photoItem.dataset.photoData = photoData; // Store the data directly
+                photoItem.innerHTML = `
+                    <img src="${photoData}" alt="Photo">
+                    <button type="button" class="photo-remove" onclick="removePhoto('${photoGroupId}', '${photoId}')">×</button>
+                `;
+                
+                previewContainer.appendChild(photoItem);
+                console.log('Photo preview added successfully');
+                
+                // Show success message
+                const imgElement = photoItem.querySelector('img');
+                imgElement.onload = function() {
+                    console.log('Photo image loaded and displayed');
+                };
+            };
+            
+            reader.onerror = function(error) {
+                console.error('Error reading file:', error);
+                alert('Error uploading photo. Please try again.');
+            };
+            
+            reader.readAsDataURL(file);
+            
+            // Reset input so same file can be selected again
+            input.value = '';
+        }
+        
+        function removePhoto(photoGroupId, photoId) {
+            console.log('removePhoto called for:', photoGroupId, photoId);
+            
+            if (!confirm('Remove this photo?')) return;
+            
+            const previewContainer = document.querySelector(`[data-photos="${photoGroupId}"]`);
+            if (!previewContainer) {
+                console.error('Preview container not found');
+                return;
+            }
+            
+            // Remove from DOM
+            const photoItem = previewContainer.querySelector(`[data-photo-id="${photoId}"]`);
+            if (photoItem) {
+                photoItem.remove();
+                console.log('Photo removed successfully from:', photoGroupId);
+            } else {
+                console.error('Photo item not found:', photoId);
+            }
+        }
+
+        // ========== Utility Functions ==========
+        function formatPhoneNumber(input) {
+            // Remove all non-numeric characters
+            let value = input.value.replace(/\D/g, '');
+            
+            // Limit to 10 digits
+            value = value.substring(0, 10);
+            
+            // Format as XXX-XXX-XXXX
+            if (value.length >= 6) {
+                input.value = value.substring(0, 3) + '-' + value.substring(3, 6) + '-' + value.substring(6);
+            } else if (value.length >= 3) {
+                input.value = value.substring(0, 3) + '-' + value.substring(3);
+            } else {
+                input.value = value;
+            }
+        }
+
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            const toggle = header.querySelector('.accordion-toggle');
+            content.classList.toggle('active');
+            toggle.classList.toggle('active');
+        }
+
+        function removeElement(btn) {
+            if (confirm('Remove this item?')) {
+                const element = btn.closest('.card') || btn.closest('.accordion-item');
+                if (element) {
+                    element.remove();
+                }
+            }
+        }
+
+        function updateAccordionTitle(input) {
+            const accordion = input.closest('.accordion-item');
+            if (accordion) {
+                const header = accordion.querySelector('.accordion-header span:first-child');
+                const prefix = header.textContent.split(':')[0];
+                header.textContent = `${prefix}: ${input.value || 'New'}`;
+            }
+        }
+
+        function generateId() {
+            return 'id_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== Export Functions ==========
+        function exportToExcel() {
+            saveFormData();
+            generateExcel(currentAssessment);
+        }
+
+        function exportAssessmentToExcel(id) {
+            const assessment = assessments.find(a => a.id === id);
+            if (assessment) generateExcel(assessment);
+        }
+
+        function generateExcel(assessment) {
+            const wb = XLSX.utils.book_new();
+            
+            // Summary Sheet
+            const summaryData = [
+                ['Assessment ID', 'Company Name', 'Internal Company ID', 'Created Date', 'Modified Date', 'Status'],
+                [
+                    assessment.id,
+                    assessment.client.name,
+                    assessment.client.internalId || '',
+                    new Date(assessment.createdAt).toLocaleDateString(),
+                    new Date(assessment.updatedAt).toLocaleDateString(),
+                    assessment.status
+                ]
+            ];
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summaryData), 'Summary');
+            
+            // Contacts Sheet
+            const contactsData = [['Assessment ID', 'Company Name', 'First Name', 'Last Name', 'Role', 'Phone', 'Email']];
+            assessment.client.contacts?.forEach(c => {
+                contactsData.push([
+                    assessment.id,
+                    assessment.client.name,
+                    c.firstName || '',
+                    c.lastName || '',
+                    c.role || '',
+                    c.phone || '',
+                    c.email || ''
+                ]);
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(contactsData), 'Contacts');
+            
+            // Locations Sheet
+            const locationsData = [['Assessment ID', 'Company Name', 'Site Name', 'Street', 'City', 'State', 'Zip', 'Building Name', 'Building Description']];
+            assessment.sites?.forEach(site => {
+                site.buildings?.forEach(building => {
+                    locationsData.push([
+                        assessment.id,
+                        assessment.client.name,
+                        site.name,
+                        site.address.street,
+                        site.address.city,
+                        site.address.state,
+                        site.address.zipCode,
+                        building.name,
+                        building.description || ''
+                    ]);
+                });
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(locationsData), 'Locations');
+            
+            // Storage Areas Sheet
+            const storageData = [['Assessment ID', 'Site', 'Building', 'Storage Area', 'Stairs', 'Elevator', 'Loading Dock', 'Vehicle Access', 'Front Door', 'Side Door', 'Rear Door', 'Description']];
+            assessment.sites?.forEach(site => {
+                site.buildings?.forEach(building => {
+                    building.storageAreas?.forEach(area => {
+                        storageData.push([
+                            assessment.id,
+                            site.name,
+                            building.name,
+                            area.name,
+                            area.access?.stairs ? 'Yes' : 'No',
+                            area.access?.elevator ? 'Yes' : 'No',
+                            area.access?.loadingDock ? 'Yes' : 'No',
+                            area.access?.vehicle ? 'Yes' : 'No',
+                            area.access?.frontDoor ? 'Yes' : 'No',
+                            area.access?.sideDoor ? 'Yes' : 'No',
+                            area.access?.rearDoor ? 'Yes' : 'No',
+                            area.description || ''
+                        ]);
+                    });
+                });
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(storageData), 'Storage Areas');
+            
+            // Collections Sheet
+            const collectionsData = [['Assessment ID', 'Company Name', 'Collection Name', 'Record Type', 'Storage Area', 'Notes']];
+            assessment.collections?.forEach(coll => {
+                // Get storage area name
+                let storageAreaName = '';
+                if (coll.storageArea) {
+                    assessment.sites?.forEach(site => {
+                        site.buildings?.forEach(building => {
+                            building.storageAreas?.forEach(area => {
+                                if (area.id === coll.storageArea) {
+                                    storageAreaName = `${site.name} - ${building.name} - ${area.name}`;
+                                }
+                            });
+                        });
+                    });
+                }
+                
+                collectionsData.push([
+                    assessment.id,
+                    assessment.client.name,
+                    coll.name,
+                    coll.recordType || '',
+                    storageAreaName,
+                    coll.notes || ''
+                ]);
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(collectionsData), 'Collections');
+            
+            // Containers Sheet
+            const containersData = [['Assessment ID', 'Company Name', 'Collection', 'Container Type', 'Other Details', 'Quantity', 'Dimensions', 'Condition']];
+            assessment.collections?.forEach(coll => {
+                coll.containerTypes?.forEach(c => {
+                    containersData.push([
+                        assessment.id,
+                        assessment.client.name,
+                        coll.name,
+                        c.type,
+                        c.otherDetails || '',
+                        c.quantity || '',
+                        c.dimensions || '',
+                        c.condition || ''
+                    ]);
+                });
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(containersData), 'Containers');
+            
+            // Media Sheet
+            const mediaData = [['Assessment ID', 'Company Name', 'Collection', 'Media Type', 'Format', 'Condition']];
+            assessment.collections?.forEach(coll => {
+                coll.mediaTypes?.forEach(m => {
+                    mediaData.push([
+                        assessment.id,
+                        assessment.client.name,
+                        coll.name,
+                        m.type,
+                        m.format || '',
+                        m.condition || ''
+                    ]);
+                });
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(mediaData), 'Media');
+            
+            // Metadata Fields Sheet
+            const metadataData = [['Assessment ID', 'Company Name', 'Collection', 'Template', 'Field Order', 'Field Name', 'Critical']];
+            assessment.collections?.forEach(coll => {
+                coll.metadataFields?.forEach(field => {
+                    metadataData.push([
+                        assessment.id,
+                        assessment.client.name,
+                        coll.name,
+                        coll.metadataTemplate || '',
+                        field.order,
+                        field.name,
+                        field.critical ? 'Yes' : 'No'
+                    ]);
+                });
+            });
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(metadataData), 'Metadata Fields');
+            
+            const fileName = `Assessment_${assessment.client.name.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+
+        function exportToJSON() {
+            saveFormData();
+            const dataStr = JSON.stringify(currentAssessment, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Assessment_${currentAssessment.client.name.replace(/[^a-z0-9]/gi, '_')}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function sendAssessmentViaEmail() {
+            saveFormData();
+            
+            if (!currentAssessment.client.name) {
+                showMobileMessage('⚠️ Error', 'Please complete the assessment before sending via email.', 'error');
+                return;
+            }
+            
+            console.log('Starting email export process...');
+            
+            // Show loading message
+            showMobileMessage('📦 Preparing Files...', 'Generating Excel file and downloading photos. Please wait...', 'info');
+            
+            // Create email content
+            const companyName = currentAssessment.client.name;
+            const subject = `Records Assessment - ${companyName}`;
+            
+            // Export Excel first
+            generateExcel(currentAssessment);
+            console.log('Excel file downloaded');
+            
+            // Download photos
+            const photoCount = downloadAllPhotos();
+            console.log('Photos downloaded');
+            
+            // Show iOS-specific instructions after downloads complete
+            setTimeout(() => {
+                const filesInfo = photoCount > 0 
+                    ? `✅ Downloaded:\n• 1 Excel file\n• ${photoCount} photo(s)` 
+                    : `✅ Downloaded:\n• 1 Excel file\n• No photos`;
+                
+                const body = `Assessment Details:
+- Company: ${companyName}
+- Status: ${currentAssessment.status}
+- Created: ${new Date(currentAssessment.createdAt).toLocaleDateString()}
+- Last Modified: ${new Date(currentAssessment.updatedAt).toLocaleDateString()}
+
+Please find the Records Assessment files for ${companyName}.`;
+                
+                // Show instructions modal
+                const instructionsHTML = `
+                    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px;" id="emailInstructionsModal" onclick="document.getElementById('emailInstructionsModal').remove()">
+                        <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; max-height: 90vh; overflow-y: auto;" onclick="event.stopPropagation()">
+                            <h2 style="color: #27ae60; margin-bottom: 20px; font-size: 24px;">📧 Files Ready!</h2>
+                            
+                            <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #27ae60;">
+                                <p style="margin: 0; font-size: 16px; white-space: pre-line;">${filesInfo}</p>
+                            </div>
+                            
+                            <h3 style="color: #333; font-size: 18px; margin-bottom: 15px;">📱 On iPhone - How to Attach Files:</h3>
+                            
+                            <ol style="padding-left: 20px; line-height: 1.8; font-size: 15px;">
+                                <li style="margin-bottom: 12px;"><strong>Tap the Download icon</strong> (⬇️) in Safari's address bar (top of screen)</li>
+                                <li style="margin-bottom: 12px;"><strong>You'll see your files listed</strong> - the Excel file and photos</li>
+                                <li style="margin-bottom: 12px;"><strong>Tap on each file</strong> to open it</li>
+                                <li style="margin-bottom: 12px;"><strong>Tap the Share button</strong> (square with arrow)</li>
+                                <li style="margin-bottom: 12px;"><strong>Choose "Mail"</strong> to attach to email</li>
+                                <li style="margin-bottom: 12px;"><strong>Repeat for all files</strong> (Excel + photos)</li>
+                            </ol>
+                            
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border: 2px solid #ffc107;">
+                                <p style="margin: 0; font-size: 14px;"><strong>💡 Tip:</strong> Files are in Safari Downloads. Look for the blue download icon (⬇️) next to the address bar.</p>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; margin-top: 25px;">
+                                <button onclick="openMailClient('${encodeURIComponent(subject)}', '${encodeURIComponent(body)}'); document.getElementById('emailInstructionsModal').remove();" style="flex: 1; background: #3498db; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                                    Open Email App
+                                </button>
+                                <button onclick="document.getElementById('emailInstructionsModal').remove()" style="flex: 1; background: #95a5a6; color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                                    Close
+                                </button>
+                            </div>
+                            
+                            <p style="margin-top: 20px; font-size: 13px; color: #666; text-align: center;">Tap outside to close</p>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', instructionsHTML);
+                
+                console.log('Email instructions displayed');
+            }, 1000);
+        }
+        
+        function openMailClient(subject, body) {
+            try {
+                const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+                window.location.href = mailtoLink;
+                console.log('Email client opened');
+            } catch (error) {
+                console.error('Error opening email client:', error);
+            }
+        }
+        
+        function showMobileMessage(title, message, type) {
+            const bgColor = type === 'error' ? '#e74c3c' : type === 'success' ? '#27ae60' : '#3498db';
+            const html = `
+                <div style="position: fixed; top: 20px; left: 20px; right: 20px; background: ${bgColor}; color: white; padding: 20px; border-radius: 12px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: slideDown 0.3s;" id="mobileMessage">
+                    <h3 style="margin: 0 0 10px 0; font-size: 18px;">${title}</h3>
+                    <p style="margin: 0; font-size: 15px;">${message}</p>
+                </div>
+                <style>
+                    @keyframes slideDown {
+                        from { transform: translateY(-100px); opacity: 0; }
+                        to { transform: translateY(0); opacity: 1; }
+                    }
+                </style>
+            `;
+            document.body.insertAdjacentHTML('beforeend', html);
+            setTimeout(() => {
+                const msg = document.getElementById('mobileMessage');
+                if (msg) msg.remove();
+            }, 3000);
+        }
+
+        function downloadAllPhotos() {
+            let photoCount = 0;
+            const timestamp = new Date().toISOString().split('T')[0];
+            const companyName = currentAssessment.client.name.replace(/[^a-z0-9]/gi, '_');
+            
+            // Download storage area photos
+            if (currentAssessment.sites) {
+                currentAssessment.sites.forEach(site => {
+                    site.buildings?.forEach(building => {
+                        building.storageAreas?.forEach(area => {
+                            if (area.photos && area.photos.length > 0) {
+                                area.photos.forEach((photoSrc, index) => {
+                                    photoCount++;
+                                    downloadPhoto(photoSrc, `${companyName}_StorageArea_${area.name.replace(/[^a-z0-9]/gi, '_')}_${index + 1}_${timestamp}.png`);
+                                });
+                            }
+                        });
+                    });
+                });
+            }
+            
+            // Download container and contents photos
+            if (currentAssessment.collections) {
+                currentAssessment.collections.forEach(collection => {
+                    collection.containerTypes?.forEach((container, containerIndex) => {
+                        if (container.containerPhotos && container.containerPhotos.length > 0) {
+                            container.containerPhotos.forEach((photoSrc, index) => {
+                                photoCount++;
+                                downloadPhoto(photoSrc, `${companyName}_Container_${collection.name.replace(/[^a-z0-9]/gi, '_')}_${containerIndex + 1}_${index + 1}_${timestamp}.png`);
+                            });
+                        }
+                        if (container.contentsPhotos && container.contentsPhotos.length > 0) {
+                            container.contentsPhotos.forEach((photoSrc, index) => {
+                                photoCount++;
+                                downloadPhoto(photoSrc, `${companyName}_Contents_${collection.name.replace(/[^a-z0-9]/gi, '_')}_${containerIndex + 1}_${index + 1}_${timestamp}.png`);
+                            });
+                        }
+                    });
+                });
+            }
+            
+            if (photoCount === 0) {
+                console.log('No photos to download');
+            } else {
+                console.log(`Downloaded ${photoCount} photos`);
+            }
+            
+            return photoCount;
+        }
+
+        function downloadPhoto(dataUrl, filename) {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importAssessment(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    imported.id = generateId();
+                    imported.createdAt = new Date().toISOString();
+                    imported.updatedAt = new Date().toISOString();
+                    assessments.push(imported);
+                    localStorage.setItem('assessments', JSON.stringify(assessments));
+                    renderAssessmentList();
+                    alert('Assessment imported successfully!');
+                } catch (err) {
+                    alert('Error importing assessment: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+    </script>
+</body>
+</html>
